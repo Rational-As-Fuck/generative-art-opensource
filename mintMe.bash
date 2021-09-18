@@ -73,13 +73,26 @@ if [ $CREATE_CANDY_MACHINE == 'YES' ]
 then
   metaplex create_candy_machine --keypair ../walletbackups/$WALLET_NAME -p $2 --env devnet 
   
-  metaplex set_start_date --keypair ../walletbackups/$WALLET_NAME -d $(date --date"=0 day ago" +%y%m%d) --env devnet
-  echo "Minting $1 editions now"
-  for x in {1..$1}; do metaplex mint_one_token --keypair ../walletbackups/$WALLET_NAME --env devnet json; done
-  echo "Your NFTs are ready!"
-  exit 0
+  metaplex set_start_date --keypair ../walletbackups/$WALLET_NAME -d "17 SEPT 2021 00:12:00 GMT" --env devnet
+  read -p "Are you ready to begin minting?  This minting will end up in the creator wallet, and you will need to sell them manually. [YES/N]   " BEGIN_SELF_MINTING
+  if [ $BEGIN_SELF_MINTING == 'YES' ]
+  then
+    read -p "How many would you like to mint?   " NUMBER_TO_MINT
+    NUM=0
+    while [ "$NUM" -lt "$NUMBER_TO_MINT" ]
+    do
+      currItem=`expr $NUM + 1`
+      echo "Minting item $currItem"
+      metaplex mint_one_token --keypair ../walletbackups/$WALLET_NAME --env devnet
+      NUM=$currItem
+    done
+    echo "Your NFTs are ready!"
+    exit 0
+  else
+    "Make sure you keep the .cache folder.  You will need this to mint the NFTs"
+    exit 0
+  fi  
 else
-  echo "If you don't want a new candy machine, then time to shut down."
+  echo "OK, ending the generator now"
   exit 0
-fi  
-
+fi 
