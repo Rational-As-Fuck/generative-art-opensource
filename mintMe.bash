@@ -23,7 +23,7 @@ then
   echo "Wallet $NEW_WALLET_NAME created.  Airdropping 10 SOL to it"
   solana airdrop 10 -u devnet -k ../walletbackups/$NEW_WALLET_NAME
 else
-  NEW_WALLET_NAME=NEW_HOTNESS.json
+  NEW_WALLET_NAME=MINTER.json
 fi
 WALLET_NAME=$NEW_WALLET_NAME 
 PUBLIC_KEY=`solana address -k ../walletbackups/$WALLET_NAME`
@@ -33,6 +33,12 @@ read -p "Go set up Phoenix or Sollet or Solflare with the new wallet.  Create a 
 
 echo "Creating the output directory if it doesn't exist"
 OUTPUT_DIR="./output"
+
+echo "Creating the masterDNA.json file if it doesn't exist"
+if [ ! -f "./input/masterDNA.json" ]
+then 
+touch ./input/masterDNA.json
+fi
 
 read -p "Would you like to clear out the output directory? [Y/n]   " CLEAR_OUTPUT_DIR
 if [ $CLEAR_OUTPUT_DIR == 'Y' ]
