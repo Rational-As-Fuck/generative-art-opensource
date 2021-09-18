@@ -108,3 +108,7 @@ dist
 
 #DO NOT UPLOAD NFTS TO GITHUB
 /output
+#DO NOT STORE THE MASTER DNA IN GITHUB
+/input/masterDNA.json
+#no need to store the workspace in Github
+/input/workspace.code-workspace
