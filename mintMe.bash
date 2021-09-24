@@ -73,7 +73,7 @@ if [ $CREATE_CANDY_MACHINE == 'YES' ]
 then
   metaplex create_candy_machine --keypair ../walletbackups/$WALLET_NAME -p $2 --env devnet 
   
-  metaplex set_start_date --keypair ../walletbackups/$WALLET_NAME -d "17 SEPT 2021 00:12:00 GMT" --env devnet
+  metaplex update_candy_machine --keypair ../walletbackups/$WALLET_NAME -date "21 SEPT 2021 00:12:00 GMT" --env devnet
   read -p "Are you ready to begin minting?  This minting will end up in the creator wallet, and you will need to sell them manually. [YES/N]   " BEGIN_SELF_MINTING
   if [ $BEGIN_SELF_MINTING == 'YES' ]
   then

@@ -22,12 +22,8 @@ const max_layers = 8; //Maximum number of layers for the project
 
 //Rarity definitions.  Represents the chance of pulling from this specific folder 
 const rarity_types = {
-  1: "08_unique",
-  5: "07_extra_legendary",
-  15: "06_legendary",
-  20: "05_extra_rare",
-  25: "04_rare",
-  45: "03_extra_special",
+  20: "04_extra_rare",
+  25: "03_rare",
   50: "02_special",
   100: "01_common"
 };
