@@ -5,7 +5,15 @@
 # example:
 # ./mintMe.bash 10 1
 # will create and mint 10 NFTs with a minting cost of 1 SOL
-LOGFILE=log/
+NOW=$(date +"%Y%m%d_%H%M%S")
+LOGFILE=$PWD/log/$NOW.log
+echo "Log will be at $LOGFILE"
+echo "#########################################################" >> $LOGFILE
+echo "###########  RAF NFT GENERATOR ##########################" >> $LOGFILE
+echo "#########################################################" >> $LOGFILE
+echo "########### Runtime: $(date +'%c') ####" >> $LOGFILE
+echo "#########################################################" >> $LOGFILE
+
 if [ "$1" == "-h" ]; then
   echo "Usage: `basename $0` [number of editions to create] [amount to charge to mint]";
   echo "Example: `basename $0` 100 .666";
@@ -14,16 +22,19 @@ if [ "$1" == "-h" ]; then
 fi
 echo "<ctrl-c> any time to quit the generator"
 read -p "Which environment are you running in? [devnet/mainnet-beta]    " env
+echo "Running this job against $env" >> $LOGFILE
 
 # create a new wallet
 read -p "Do you need a new wallet? [Y/n]   " NEW_WALLET
 if [ $NEW_WALLET == 'Y' ]
 then
+  echo "Creating a new wallet." >> $LOGFILE
   read -p "DID YOU BACKUP YOUR OLD WALLET?  If not, and you need to, do it now."
   read -p "What name do you want the wallet to have?   " NEW_WALLET_NAME
-  solana-keygen new --outfile "../walletbackups/$NEW_WALLET_NAME" --force
+  echo "Storing the new wallet as ../walletbackups/$NEW_WALLET_NAME" >> $LOGFILE
+  solana-keygen new --outfile "../walletbackups/$NEW_WALLET_NAME" --force >> $LOGFILE
   read -p "Wallet $NEW_WALLET_NAME created.  How much SOL do you need (be conservative!)  " ADTOTAL
-  echo "Airdropping $ADTOTAL SOL to it"
+  echo "Airdropping $ADTOTAL SOL" 
   ADNUM=0
   while [ "$ADNUM" -lt "$ADTOTAL" ]
   do
@@ -32,14 +43,15 @@ then
       solana airdrop 1 -u $env --keypair ../walletbackups/$NEW_WALLET_NAME 
       ADNUM=$currItem
   done
-  echo "Currnet solana balance is: "
-  solana balance -k ~/walletbackups/$NEW_WALLET_NAME
+  echo "Currnet solana balance is: " >> $LOGFILE
+  solana balance -k ~/walletbackups/$NEW_WALLET_NAME >> $LOGFILE
 else
   NEW_WALLET_NAME=MINTER.json
+  echo "Using current wallet called '../walletbackups/$NEW_WALLET_NAME'" >> $LOGFILE
 fi
 WALLET_NAME=$NEW_WALLET_NAME 
 PUBLIC_KEY=`solana address -k ../walletbackups/$WALLET_NAME`
-echo "Public Key for the generating wallet is $PUBLIC_KEY"
+echo "Public Key for the generating wallet is $PUBLIC_KEY" >> $LOGFILE
 
 read -p "Go set up Phoenix or Sollet or Solflare with the new wallet.  Create a new wallet (with this passphrase AND THEN import the private key to a new account.  Press any key to continue..."
 echo "Creating the output directory if it doesn't exist"
@@ -55,6 +67,7 @@ read -p "Would you like to clear out the output directory? [Y/n]   " CLEAR_OUTPU
 if [ $CLEAR_OUTPUT_DIR == 'Y' ]
 then
   rm -Rf output
+  echo "Output directory is cleared out" >> $LOGFILE
 fi
 
 echo "The current output directory is $OUTPUT_DIR"
@@ -67,7 +80,7 @@ read -p "Your layers should be prepared at this time.  Are you ready to generate
 if [ $READY_TO_GENERATE == 'Y' ]
 then
   echo "generating $1 NFTs"
-  node index.js $1 $PUBLIC_KEY >> "$PWD\logfile.log"
+  node index.js $1 $PUBLIC_KEY >> $LOGFILE
 else
   echo "OK - quitting now.  Please make sure your layers are ready to go for next time."
 fi
@@ -75,13 +88,13 @@ fi
 read -p "Should we destroy the last .cache directory?  THIS WILL DESTROY THE LAST RUN.  [YES/n]   " DESTROY_CACHE
 if [ $DESTROY_CACHE == 'YES' ]
 then 
-  echo "Destroying the remnants of the last run"
+  echo "Destroying the remnants of the last run" >> $LOGFILE
   rm -Rf .cache
-  echo "Uploading NFTs to Arweave"
+  echo "Uploading NFTs to Arweave" >> $LOGFILE
   # metaplex upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
   ts-node cli upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
 fi
-metaplex verify --env devnet --keypair ../walletbackups/$WALLET_NAME
+ts-node cli verify --env devnet --keypair ../walletbackups/$WALLET_NAME
 read -p "Ready to create the candy machine with a minting price of $2? [YES/n]   " CREATE_CANDY_MACHINE
 if [ $CREATE_CANDY_MACHINE == 'YES' ]
 then
