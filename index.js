@@ -121,7 +121,9 @@ const startCreating = async () => {
   const allItems = allDNA.allDNA;
  
   for (let idx = 0; idx < allItems.length; idx++) {
+    console.log(`------------------------------------------`);
     console.log(`----------->Item Number ${idx}<-----------`);
+    console.log(`------------------------------------------`);
     
     let currDna = allItems[idx].dna;
 

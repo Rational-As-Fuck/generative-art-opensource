@@ -5,6 +5,7 @@
 # example:
 # ./mintMe.bash 10 1
 # will create and mint 10 NFTs with a minting cost of 1 SOL
+LOGFILE=log/
 if [ "$1" == "-h" ]; then
   echo "Usage: `basename $0` [number of editions to create] [amount to charge to mint]";
   echo "Example: `basename $0` 100 .666";
@@ -12,6 +13,7 @@ if [ "$1" == "-h" ]; then
   exit 0
 fi
 echo "<ctrl-c> any time to quit the generator"
+read -p "Which environment are you running in? [devnet/mainnet-beta]    " env
 
 # create a new wallet
 read -p "Do you need a new wallet? [Y/n]   " NEW_WALLET
@@ -20,8 +22,18 @@ then
   read -p "DID YOU BACKUP YOUR OLD WALLET?  If not, and you need to, do it now."
   read -p "What name do you want the wallet to have?   " NEW_WALLET_NAME
   solana-keygen new --outfile "../walletbackups/$NEW_WALLET_NAME" --force
-  echo "Wallet $NEW_WALLET_NAME created.  Airdropping 10 SOL to it"
-  solana airdrop 10 -u devnet -k ../walletbackups/$NEW_WALLET_NAME
+  read -p "Wallet $NEW_WALLET_NAME created.  How much SOL do you need (be conservative!)  " ADTOTAL
+  echo "Airdropping $ADTOTAL SOL to it"
+  ADNUM=0
+  while [ "$ADNUM" -lt "$ADTOTAL" ]
+  do
+      currItem=`expr $ADNUM + 1`
+      echo "Airdropping # $currItem"
+      solana airdrop 1 -u $env --keypair ../walletbackups/$NEW_WALLET_NAME 
+      ADNUM=$currItem
+  done
+  echo "Currnet solana balance is: "
+  solana balance -k ~/walletbackups/$NEW_WALLET_NAME
 else
   NEW_WALLET_NAME=MINTER.json
 fi
@@ -30,7 +42,6 @@ PUBLIC_KEY=`solana address -k ../walletbackups/$WALLET_NAME`
 echo "Public Key for the generating wallet is $PUBLIC_KEY"
 
 read -p "Go set up Phoenix or Sollet or Solflare with the new wallet.  Create a new wallet (with this passphrase AND THEN import the private key to a new account.  Press any key to continue..."
-
 echo "Creating the output directory if it doesn't exist"
 OUTPUT_DIR="./output"
 
@@ -46,6 +57,8 @@ then
   rm -Rf output
 fi
 
+echo "The current output directory is $OUTPUT_DIR"
+
 if [ ! -d "$OUTPUT_DIR" ]; then
   mkdir $OUTPUT_DIR
 fi
@@ -54,7 +67,7 @@ read -p "Your layers should be prepared at this time.  Are you ready to generate
 if [ $READY_TO_GENERATE == 'Y' ]
 then
   echo "generating $1 NFTs"
-  node index.js $1 $PUBLIC_KEY
+  node index.js $1 $PUBLIC_KEY >> "$PWD\logfile.log"
 else
   echo "OK - quitting now.  Please make sure your layers are ready to go for next time."
 fi
@@ -65,7 +78,8 @@ then
   echo "Destroying the remnants of the last run"
   rm -Rf .cache
   echo "Uploading NFTs to Arweave"
-  metaplex upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
+  # metaplex upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
+  ts-node cli upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
 fi
 metaplex verify --env devnet --keypair ../walletbackups/$WALLET_NAME
 read -p "Ready to create the candy machine with a minting price of $2? [YES/n]   " CREATE_CANDY_MACHINE

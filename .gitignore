@@ -112,3 +112,6 @@ dist
 /input/masterDNA.json
 #no need to store the workspace in Github
 /input/workspace.code-workspace
+#DO NOT STORE ANY IMAGES ON GITHUB
+/input/background
+/input/layer*

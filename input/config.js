@@ -22,21 +22,30 @@ const max_layers = 8; //Maximum number of layers for the project
 
 //Rarity definitions.  Represents the chance of pulling from this specific folder 
 const rarity_types = {
-  20: "04_extra_rare",
-  25: "03_rare",
-  50: "02_special",
-  100: "01_common"
+  0.0123: "04_extra_rare",
+  25.0000: "03_rare",
+  50.555: "02_special",
+  99.997: "01_common"
 };
 
 const layer_names = {
-  0: "background",
-  1: "bodystyle1",
-  2: "bodystyle2",
-  3: "bodystyle3",
-  4: "bodystyle4",
-  5: "mouth",
-  6: "eyes",
-  7: "symbol"
+  0: "Background",
+  1: "Framing Element",
+  2: "Side Accessory",
+  3: "Skull",
+  4: "Jaw Ornament",
+  5: "Forehead Ornament",
+  6: "Face Ornament Left",
+  7: "Face Ornament Right",
+  8: "Mouth",
+  9: "Eye Ornament Left",
+  10: "Eye Ornament Right",
+  11: "Eye Sockets",
+  12: "Nose Shape",
+  13: "Eyes",
+  14: "Facial Hair",
+  15: "Face Accessory",
+  16: "Head Top",
 }
 
 const traitDefinition = {
@@ -61,14 +70,16 @@ const addLayers = (max_items) => {
       // For each layer
       let layerSelected = false;
       console.log(`Calculating layer ${currLayer} for edition ${item}`);
-      let randSeed = Math.floor(Math.random() * 100);
+      let randSeed = Math.random() * 100;
       // Get the layer by rarity folder name
       const numRarityTypes = Object.keys(rarity_types).length;
+
       for (let rarityType = 0; rarityType <= numRarityTypes; rarityType++) {
         if (!layerSelected) {
           const rarityValues = Object.keys(rarity_types);
-          let selectedRarityValue = parseInt(rarityValues[rarityType]);
+          let selectedRarityValue = rarityValues[rarityType];
           //If the rarity is above the current type, then select it.
+          console.log(`Evaluating ${selectedRarityValue} against the randomly generated seed ${randSeed}`);
           if (!layerSelected && selectedRarityValue >= randSeed) {
             const thisNFT = {
               "layer": currLayer == 0 ? 'background' : `layer${currLayer}`,
@@ -77,10 +88,19 @@ const addLayers = (max_items) => {
             thisNFT.fileLocation = `./input/${thisNFT.layer}/${thisNFT.rarity}`;
             var fileList = fs.readdirSync(thisNFT.fileLocation);
             //pick one of the files in the directory to use
+            console.log(fileList);
             if (fileList.length != 0) {
                 let fileindex = Math.floor(Math.random() * fileList.length);
                 thisNFT.fileURI = `${thisNFT.fileLocation}/${fileList[fileindex]}`;
+
+
+
+
+
+
                 if (fs.existsSync(thisNFT.fileURI)) {
+                  console.log(`I am using the file: ${thisNFT.fileURI}`);
+                  console.log(`The file name is ${fileList[fileindex]}`);
                   itemDNA.push({
                     layer: thisNFT.layer,
                     rarity: thisNFT.rarity,
@@ -88,11 +108,17 @@ const addLayers = (max_items) => {
                     fileURI: thisNFT.fileURI,
                     filename: fileList[fileindex],
                   });
+  
+  
+  
+  
+  
                   layerSelected = true;
                   dnaValue += parseInt(currLayer) + thisNFT.rarity.substring(0, 2) + fileindex + '*';
                   layerTraits.push({
                     trait_type: layer_names[currLayer],
-                    value: thisNFT.rarity.substring(3),
+                    value: fileList[fileindex].substring(0, fileList[fileindex].indexOf('.')),
+                    //value: thisNFT.rarity.substring(3),
                   });
                 }
               //TODO: compile stats
@@ -102,7 +128,9 @@ const addLayers = (max_items) => {
               console.log(`File ${thisNFT.fileLocation} not found in /input.  Selecting another file for this layer.`);
             }
           } else {
+            console.log(`*****************************************`);
             console.log(`rarity ${selectedRarityValue} is not greater than or equal to ${randSeed}`);
+            console.log(`*****************************************`);
           }
         }
       }
