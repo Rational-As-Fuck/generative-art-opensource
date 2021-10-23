@@ -7,6 +7,8 @@
 # will create and mint 10 NFTs with a minting cost of 1 SOL
 NOW=$(date +"%Y%m%d_%H%M%S")
 LOGFILE=$PWD/log/$NOW.log
+#CM_HOME=metaplex/js/packages/cli/build
+CM_HOME=cm/buildYES
 echo "Log will be at $LOGFILE"
 echo "#########################################################" >> $LOGFILE
 echo "###########  RAF NFT GENERATOR ##########################" >> $LOGFILE
@@ -22,6 +24,21 @@ if [ "$1" == "-h" ]; then
 fi
 echo "<ctrl-c> any time to quit the generator"
 read -p "Which environment are you running in? [devnet/mainnet-beta]    " env
+
+if [ $env == 'mainnet-beta' ]; then
+  echo "Ensure your wallet is present in ../walletbackups and has SOL"
+  read -p "Do you want to continue?    [Y/n]" CONTINUE_WITH_PROD
+  if [ $CONTINUE_WITH_PROD != 'Y' ]; then
+    echo "OK.  Stopping now"
+    exit 0
+  fi
+fi
+
+if [ $env != 'mainnet-beta' ] && [ $env != 'devnet' ]; then
+  echo "You must use either 'mainnet-beta' or 'devnet' for the environment.  Try again."
+  exit 0
+fi
+
 echo "Running this job against $env" >> $LOGFILE
 
 # create a new wallet
@@ -91,35 +108,37 @@ then
   echo "Destroying the remnants of the last run" >> $LOGFILE
   rm -Rf .cache
   echo "Uploading NFTs to Arweave" >> $LOGFILE
-  # metaplex upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
-  ts-node cli upload ./output --env devnet --keypair ../walletbackups/$WALLET_NAME
+  npx ts-node $CM_HOME/candy-machine-cli.js upload ./output --env $env --keypair ../walletbackups/$WALLET_NAME >> $LOGFILE
 fi
-ts-node cli verify --env devnet --keypair ../walletbackups/$WALLET_NAME
+npx ts-node $CM_HOME/candy-machine-cli.js verify --env devnet --keypair ../walletbackups/$WALLET_NAME >> $LOGFILE
 read -p "Ready to create the candy machine with a minting price of $2? [YES/n]   " CREATE_CANDY_MACHINE
 if [ $CREATE_CANDY_MACHINE == 'YES' ]
 then
-  metaplex create_candy_machine --keypair ../walletbackups/$WALLET_NAME -p $2 --env devnet 
+  npx ts-node $CM_HOME/candy-machine-cli.js create_candy_machine --env $env --keypair ../walletbackups/$WALLET_NAME -p $2 >> $LOGFILE
   
-  metaplex update_candy_machine --keypair ../walletbackups/$WALLET_NAME -date "21 SEPT 2021 00:12:00 GMT" --env devnet
+  npx ts-node $CM_HOME/candy-machine-cli.js update_candy_machine --env $env --keypair ../walletbackups/$WALLET_NAME -date "21 SEPT 2021 00:12:00 GMT" >> $LOGFILE 
   read -p "Are you ready to begin minting?  This minting will end up in the creator wallet, and you will need to sell them manually. [YES/N]   " BEGIN_SELF_MINTING
   if [ $BEGIN_SELF_MINTING == 'YES' ]
   then
+    echo "Beginning self minting process" >> $LOGFILE
     read -p "How many would you like to mint?   " NUMBER_TO_MINT
+    echo "MINTING $NUMBER_TO_MINT" >> $LOGFILE
     NUM=0
     while [ "$NUM" -lt "$NUMBER_TO_MINT" ]
     do
       currItem=`expr $NUM + 1`
-      echo "Minting item $currItem"
-      metaplex mint_one_token --keypair ../walletbackups/$WALLET_NAME --env devnet
+      echo "Minting item $currItem" >> $LOGFILE
+      npx ts-node $CM_HOME/candy-machine-cli.js mint_one_token --keypair ../walletbackups/$WALLET_NAME --env devnet >> $LOGFILE
       NUM=$currItem
     done
     echo "Your NFTs are ready!"
+    echo "Job Complete!" >> $LOGFILE
     exit 0
   else
-    "Make sure you keep the .cache folder.  You will need this to mint the NFTs"
+    "Make sure you keep the .cache folder.  You will need this to mint the NFTs" >> $LOGFILE
     exit 0
   fi  
 else
-  echo "OK, ending the generator now"
+  echo "OK, ending the generator now" >> $LOGFILE
   exit 0
 fi 
